@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 Roleta da Sorte - L'arte Gourmet</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(220,38,38,0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(212,175,55,0.12) 0%, transparent 55%),
+      linear-gradient(135deg, #0a0a0a 0%, #1a0505 50%, #000 100%);
+    min-height: 100vh;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    overflow-x: hidden;
+  }
+  .container {
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+  .logo-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .flag {
+    width: 32px;
+    height: 22px;
+    background: linear-gradient(to right, #009246 33%, #fff 33%, #fff 66%, #ce2b37 66%);
+    border-radius: 3px;
+  }
+  .logo {
+    font-size: 36px;
+    font-weight: 900;
+    font-style: italic;
+    line-height: 1;
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: #FFD700;
+    letter-spacing: 8px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #FFD700, #FFF4B8, #FFD700);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+    letter-spacing: -1px;
+  }
+  .subtitle {
+    color: #FFD700;
+    font-size: 13px;
+    letter-spacing: 4px;
+    margin-bottom: 24px;
+    font-weight: 600;
+  }
+
+  /* Tela de validação */
+  .validate-screen {
+    background: linear-gradient(135deg, #1a0a0a, #2a0a0a);
+    border: 2px solid #FFD700;
+    border-radius: 20px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 40px rgba(255,215,0,0.2);
+  }
+  .validate-screen h2 {
+    font-size: 18px;
+    color: #FFD700;
+    margin-bottom: 16px;
+  }
+  .validate-screen p {
+    font-size: 13px;
+    color: #ccc;
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 2px solid #444;
+    background: #0a0a0a;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    outline: none;
+  }
+  input[type="text"]:focus {
+    border-color: #FFD700;
+  }
+  .btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #ea1d2c, #b91824);
+    color: white;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(234,29,44,0.5);
+    transition: transform 0.2s;
+    width: 100%;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-spin {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #0a0a0a;
+    margin-top: 20px;
+  }
+  .error-msg {
+    color: #ff6b6b;
+    font-size: 13px;
+    margin-top: 8px;
+    min-height: 18px;
+  }
+
+  /* Roleta */
+  .wheel-wrap {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    margin: 0 auto 24px;
+  }
+  .pointer {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 22px solid transparent;
+    border-right: 22px solid transparent;
+    border-top: 36px solid #FFD700;
+    z-index: 10;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+  }
+  .pointer::after {
+    content: '';
+    position: absolute;
+    top: -34px;
+    left: -18px;
+    width: 36px;
+    height: 30px;
+    background: #ea1d2c;
+    border-radius: 50%;
+    z-index: -1;
+  }
+  .wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: relative;
+    transition: transform 5s cubic-bezier(0.17, 0.67, 0.21, 0.99);
+    box-shadow:
+      0 0 0 8px #FFD700,
+      0 0 0 12px #FFF4B8,
+      0 0 0 16px #FFD700,
+      0 0 50px rgba(255,215,0,0.6);
+    overflow: hidden;
+  }
+  .wheel-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .wheel-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 56px;
+    height: 56px;
+    background: radial-gradient(circle at 35% 35%, #FFF4B8, #FFD700, #B8860B);
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 5;
+    border: 3px solid #fff;
+  }
+
+  /* Modal de prêmio */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .modal-bg.active { display: flex; }
+  .modal {
+    background: linear-gradient(135deg, #1a0a0a, #2a0a0a);
+    border: 3px solid #FFD700;
+    border-radius: 24px;
+    padding: 32px 24px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(255,215,0,0.4);
+    animation: pop 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+  @keyframes pop {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal-icon {
+    font-size: 80px;
+    margin-bottom: 12px;
+  }
+  .modal h3 {
+    font-size: 28px;
+    color: #FFD700;
+    margin-bottom: 10px;
+    font-weight: 900;
+  }
+  .modal p {
+    color: #ddd;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .modal .prize-name {
+    color: white;
+    font-size: 22px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 12px 0;
+  }
+  .modal-code {
+    background: #0a0a0a;
+    border: 2px dashed #FFD700;
+    padding: 12px;
+    border-radius: 12px;
+    color: #FFD700;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    margin: 16px 0;
+  }
+  .instructions {
+    background: rgba(255,215,0,0.08);
+    border-left: 3px solid #FFD700;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: #ddd;
+    text-align: left;
+    line-height: 1.5;
+  }
+
+  /* Rules box */
+  .rules {
+    margin-top: 24px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    padding: 16px 18px;
+    font-size: 11px;
+    color: #999;
+    line-height: 1.6;
+    text-align: left;
+  }
+  .rules strong { color: #FFD700; }
+  footer {
+    margin-top: 20px;
+    font-size: 10px;
+    color: #555;
+    text-align: center;
+  }
+  .hidden { display: none !important; }
+
+  /* Confetti */
+  .confetti {
+    position: fixed;
+    top: -10px;
+    width: 10px;
+    height: 10px;
+    z-index: 99;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="logo-area">
+    <div class="flag"></div>
+    <div>
+      <div class="logo">L'arte</div>
+      <div class="logo-sub">GOURMET</div>
+    </div>
+  </div>
+
+  <h1>🎰 ROLETA DA SORTE</h1>
+  <div class="subtitle">★ GIRE E GANHE BRINDES INCRÍVEIS ★</div>
+
+  <!-- TELA 1: Validação -->
+  <div id="screen-validate" class="validate-screen">
+    <h2>🛵 Já fez seu pedido?</h2>
+    <p>Para girar a roleta, informe o <strong style="color:#FFD700">número do seu pedido do iFood</strong>:</p>
+    <input type="text" id="orderNumber" placeholder="EX: 1234567" maxlength="15" autocomplete="off">
+    <button class="btn" onclick="validateOrder()">VALIDAR E GIRAR 🎰</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- TELA 2: Roleta -->
+  <div id="screen-wheel" class="hidden">
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <div class="wheel" id="wheel">
+        <svg class="wheel-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- 10 segmentos de 36° cada -->
+          <!-- Cada segmento: path com arco e texto -->
+        </svg>
+      </div>
+      <div class="wheel-center"></div>
+    </div>
+    <button class="btn btn-spin" id="btnSpin" onclick="spin()">🎰 GIRAR ROLETA</button>
+    <p style="font-size:11px;color:#888;margin-top:12px">Pedido: <span id="orderDisplay" style="color:#FFD700"></span></p>
+  </div>
+
+  <!-- Modal de Prêmio -->
+  <div class="modal-bg" id="modal">
+    <div class="modal">
+      <div class="modal-icon" id="modalIcon">🎁</div>
+      <h3 id="modalTitle">PARABÉNS!</h3>
+      <div class="prize-name" id="modalPrize">Você ganhou!</div>
+      <p id="modalDesc"></p>
+      <div class="modal-code hidden" id="modalCode"></div>
+      <div class="instructions" id="modalInstructions"></div>
+      <button class="btn" onclick="closeModal()">FECHAR</button>
+    </div>
+  </div>
+
+  <div class="rules">
+    <strong>📋 REGULAMENTO RESUMIDO</strong><br>
+    • Apenas 1 giro por pedido (cada nº do iFood é único).<br>
+    • Brindes entregues junto com o pedido.<br>
+    • Vouchers em dinheiro usados <strong>presencialmente</strong> no restaurante (validade 30 dias).<br>
+    • Promoção válida enquanto durar o estoque.<br>
+    • <strong>Regulamento completo</strong> disponível mediante solicitação.
+  </div>
+
+  <footer>
+    © L'arte Gourmet 2026 · Promoção sem caráter aleatório (sorteio interno por sistema)
+  </footer>
+</div>
+
+<script>
+// ===================================
+// CONFIGURAÇÃO DOS PRÊMIOS E PROBABILIDADES
+// ===================================
+const prizes = [
+  { id: 'r100',    label: 'R$ 100',     icon: '💰', color: '#FFD700', textColor: '#0a0a0a', weight: 1  },  // 1%
+  { id: 'fail1',   label: 'Tente +1',   icon: '😅', color: '#333',    textColor: '#fff',    weight: 18 }, // 18%
+  { id: 'r20',     label: 'R$ 20',      icon: '💴', color: '#22a04a', textColor: '#fff',    weight: 5  },  // 5%
+  { id: 'tira',    label: 'Tiramisu',   icon: '🍰', color: '#8B4513', textColor: '#fff',    weight: 7  },  // 7%
+  { id: 'fail2',   label: 'Tente +1',   icon: '😅', color: '#444',    textColor: '#fff',    weight: 18 }, // 18%
+  { id: 'r50',     label: 'R$ 50',      icon: '💵', color: '#1e88e5', textColor: '#fff',    weight: 2  },  // 2%
+  { id: 'refri',   label: 'Refri',      icon: '🥤', color: '#ea1d2c', textColor: '#fff',    weight: 10 }, // 10%
+  { id: 'fail3',   label: 'Tente +1',   icon: '😅', color: '#333',    textColor: '#fff',    weight: 17 }, // 17%
+  { id: 'vinho',   label: 'Vinho',      icon: '🍷', color: '#722f37', textColor: '#fff',    weight: 4  },  // 4%
+  { id: 'fail4',   label: 'Tente +1',   icon: '😅', color: '#444',    textColor: '#fff',    weight: 18 }  // 18%
+];
+// Total weight = 100
+
+// URLs de notificação (configurar com seu webhook real)
+// Exemplo grátis: https://formspree.io ou Google Forms (transforma em planilha automaticamente)
+const NOTIFY_URL = 'https://formspree.io/f/SEU_ID_AQUI'; // ← SUBSTITUIR
+
+// ===================================
+// CONSTRUIR ROLETA SVG
+// ===================================
+function buildWheel() {
+  const svg = document.querySelector('.wheel-svg');
+  const total = prizes.length;
+  const anglePer = 360 / total;
+  let svgContent = '';
+
+  prizes.forEach((p, i) => {
+    const startAngle = i * anglePer - 90;
+    const endAngle = (i + 1) * anglePer - 90;
+    const startRad = startAngle * Math.PI / 180;
+    const endRad = endAngle * Math.PI / 180;
+
+    const x1 = 50 + 50 * Math.cos(startRad);
+    const y1 = 50 + 50 * Math.sin(startRad);
+    const x2 = 50 + 50 * Math.cos(endRad);
+    const y2 = 50 + 50 * Math.sin(endRad);
+
+    const largeArc = anglePer > 180 ? 1 : 0;
+    const path = `M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+    // Posição do texto/icon (meio do segmento)
+    const midAngle = (startAngle + endAngle) / 2;
+    const midRad = midAngle * Math.PI / 180;
+    const tx = 50 + 32 * Math.cos(midRad);
+    const ty = 50 + 32 * Math.sin(midRad);
+
+    const iconX = 50 + 24 * Math.cos(midRad);
+    const iconY = 50 + 24 * Math.sin(midRad);
+
+    svgContent += `
+      <path d="${path}" fill="${p.color}" stroke="#FFD700" stroke-width="0.3"/>
+      <text x="${iconX}" y="${iconY}" text-anchor="middle" font-size="6" fill="${p.textColor}" transform="rotate(${midAngle + 90} ${iconX} ${iconY})">${p.icon}</text>
+      <text x="${tx}" y="${ty}" text-anchor="middle" font-size="3" font-weight="900" fill="${p.textColor}" transform="rotate(${midAngle + 90} ${tx} ${ty})">${p.label}</text>
+    `;
+  });
+
+  svg.innerHTML = svgContent;
+}
+
+// ===================================
+// VALIDAR PEDIDO
+// ===================================
+let currentOrder = '';
+
+function validateOrder() {
+  const input = document.getElementById('orderNumber');
+  const err = document.getElementById('errorMsg');
+  const order = input.value.trim();
+
+  if (order.length < 4) {
+    err.textContent = '⚠️ Digite um número de pedido válido (mínimo 4 dígitos)';
+    return;
+  }
+
+  // Verificar se este pedido já girou (localStorage)
+  const usedOrders = JSON.parse(localStorage.getItem('larte_orders') || '[]');
+  if (usedOrders.includes(order)) {
+    err.textContent = '❌ Este pedido já foi usado para girar a roleta.';
+    return;
+  }
+
+  currentOrder = order;
+  document.getElementById('orderDisplay').textContent = '#' + order;
+  document.getElementById('screen-validate').classList.add('hidden');
+  document.getElementById('screen-wheel').classList.remove('hidden');
+}
+
+// ===================================
+// SORTEIO PONDERADO
+// ===================================
+function getRandomPrize() {
+  const totalWeight = prizes.reduce((s, p) => s + p.weight, 0);
+  let r = Math.random() * totalWeight;
+  for (let i = 0; i < prizes.length; i++) {
+    r -= prizes[i].weight;
+    if (r <= 0) return { prize: prizes[i], index: i };
+  }
+  return { prize: prizes[prizes.length - 1], index: prizes.length - 1 };
+}
+
+// ===================================
+// GIRAR ROLETA
+// ===================================
+let currentRotation = 0;
+let isSpinning = false;
+
+function spin() {
+  if (isSpinning) return;
+  isSpinning = true;
+
+  const btn = document.getElementById('btnSpin');
+  btn.disabled = true;
+  btn.textContent = '🎰 Girando...';
+
+  const { prize, index } = getRandomPrize();
+  const segmentAngle = 360 / prizes.length;
+  // Apontar para o meio do segmento sorteado, somando voltas extras
+  const targetAngle = 360 * 6 + (360 - (index * segmentAngle + segmentAngle / 2));
+  currentRotation = targetAngle;
+
+  document.getElementById('wheel').style.transform = `rotate(${currentRotation}deg)`;
+
+  setTimeout(() => {
+    showResult(prize);
+    notifyWinner(prize);
+    isSpinning = false;
+  }, 5200);
+}
+
+// ===================================
+// MOSTRAR RESULTADO
+// ===================================
+function showResult(prize) {
+  const modal = document.getElementById('modal');
+  const isWin = !prize.id.startsWith('fail');
+
+  document.getElementById('modalIcon').textContent = isWin ? '🎉' : '😅';
+  document.getElementById('modalTitle').textContent = isWin ? 'PARABÉNS!' : 'Quase!';
+
+  const codeEl = document.getElementById('modalCode');
+  const instr = document.getElementById('modalInstructions');
+
+  if (isWin) {
+    document.getElementById('modalPrize').textContent = prize.icon + ' ' + prize.label;
+    const code = 'LAR' + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+    let prizeText = '';
+    let instrText = '';
+
+    if (prize.id === 'r100' || prize.id === 'r50' || prize.id === 'r20') {
+      prizeText = `Você ganhou um <strong style="color:#FFD700">voucher de ${prize.label}</strong> para usar presencialmente no restaurante!`;
+      instrText = '📌 Apresente este código no caixa do restaurante (validade: 30 dias). Não cumulativo com outras promoções.';
+      codeEl.textContent = '🎟️ ' + code;
+      codeEl.classList.remove('hidden');
+    } else {
+      const itemMap = {
+        'vinho': 'Meia garrafa de vinho tinto seco',
+        'tira': 'Uma porção de Tiramisu artesanal',
+        'refri': 'Uma lata de refrigerante 350ml'
+      };
+      prizeText = `Você ganhou: <strong style="color:#FFD700">${itemMap[prize.id]}</strong>!`;
+      instrText = '🛵 Seu brinde será entregue JUNTO com o pedido. Mostre esta tela ao entregador.';
+      codeEl.textContent = '🎟️ ' + code;
+      codeEl.classList.remove('hidden');
+    }
+
+    document.getElementById('modalDesc').innerHTML = prizeText;
+    instr.innerHTML = instrText;
+    fireConfetti();
+  } else {
+    document.getElementById('modalPrize').textContent = '😅 Não foi dessa vez';
+    document.getElementById('modalDesc').innerHTML = 'Não desanime! Faça outro pedido e tente novamente. <strong style="color:#FFD700">Boa sorte!</strong>';
+    instr.innerHTML = '💡 Dica: a cada pedido, você ganha um novo giro!';
+    codeEl.classList.add('hidden');
+  }
+
+  // Salvar pedido como usado
+  const usedOrders = JSON.parse(localStorage.getItem('larte_orders') || '[]');
+  usedOrders.push(currentOrder);
+  localStorage.setItem('larte_orders', JSON.stringify(usedOrders));
+
+  modal.classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+  // Voltar ao início
+  setTimeout(() => location.reload(), 300);
+}
+
+// ===================================
+// NOTIFICAR GANHADOR (Webhook)
+// ===================================
+function notifyWinner(prize) {
+  const isWin = !prize.id.startsWith('fail');
+  if (!isWin) return; // só notifica quando ganha
+
+  const data = {
+    pedido: currentOrder,
+    premio: prize.label,
+    icone: prize.icon,
+    data: new Date().toLocaleString('pt-BR'),
+    timestamp: Date.now()
+  };
+
+  // Tentativa de envio (silencioso, não trava UX)
+  if (NOTIFY_URL && !NOTIFY_URL.includes('SEU_ID_AQUI')) {
+    fetch(NOTIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).catch(() => {});
+  }
+
+  console.log('🎉 GANHADOR:', data);
+}
+
+// ===================================
+// CONFETTI
+// ===================================
+function fireConfetti() {
+  const colors = ['#FFD700','#FFF4B8','#ea1d2c','#22a04a','#1e88e5'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.transform = `rotate(${Math.random() * 360}deg)`;
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      document.body.appendChild(c);
+      c.animate([
+        { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+        { transform: `translateY(110vh) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+      ], { duration: 3000 + Math.random() * 2000, easing: 'cubic-bezier(0.1, 0.5, 0.5, 1)' });
+      setTimeout(() => c.remove(), 5000);
+    }, i * 30);
+  }
+}
+
+// Inicializar
+buildWheel();
+</script>
+</body>
+</html>
